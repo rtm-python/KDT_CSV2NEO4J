@@ -24,7 +24,7 @@ D. Dockerize python-script, REST API service and Neo4j / ElasticSearch with dock
 
 ## Usage
 
-* Neo4j (Community Version) 4.1.3
-* ElasticSearch 7.9.3
-* Python 3.6.8
-* py2neo 2020.0.0
+* [Neo4j (Community Version) 4.1.3](https://neo4j.com/docs/operations-manual/current/installation/linux/rpm/#linux-rpm-install-standard)
+* [ElasticSearch 7.9.3](https://www.elastic.co/guide/en/elasticsearch/reference/7.9/rpm.html)
+* [Python 3.6.8](https://centos.pkgs.org/8/okey-x86_64/python36-3.6.8-2.el8.x86_64.rpm.html)
+* [py2neo 2020.0.0](https://py2neo.org/2020.0/)
