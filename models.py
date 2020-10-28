@@ -28,6 +28,8 @@ class Organization(GraphObject):
 		Initialize object with properties:
 		group_id, name.
 		'''
+		if group_id is None or name is None:
+			raise ValueError('Value of group_id and name could not be None')
 		self.group_id = group_id
 		self.name = name
 
@@ -55,6 +57,12 @@ class Person(GraphObject):
 		with properties (id, name, alias, email and nationality)
 		and relationship (membership).
 		'''
+		if id is None or name is None or alias is None or email is None or \
+				nationality is None or organization is None:
+			raise ValueError(
+				'Value of id, namem aliasm email, nationality ' +
+				'and organization could not be None'
+			)
 		self.id = id
 		self.name = name
 		self.alias = alias
