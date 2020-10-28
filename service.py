@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
 
 '''
-Service module with implementation of:
-- reading data from CSV-file and storing it to Neo4j-database;
-- handling REST requests to access data stored in Neo4j-database.
+Service module with implementation of reading data
+from CSV-file and storing it to Neo4j-database;
 '''
 
 # standard libraries imports
-import os, sys
 import csv
 import logging
 
-# additional libraries imports
-from py2neo import Graph
-
 # modules imports
+from run import graph, app
 from models import Organization, Person
 
 # headers' names
@@ -25,28 +21,6 @@ HEADER_NAME = 'name'
 HEADER_SORT_NAME = 'sort_name'
 HEADER_EMAIL = 'email'
 VALUE_NATIONALITY = 'GB (Great Britain)'
-
-# connect to Neo4j-database
-NEO4J_DATABASE = 'NEO4J_DATABASE'
-NEO4J_USER = 'NEO4J_USER'
-NEO4J_PASSWORD = 'NEO4J_PASSWORD'
-
-# try to connect
-graph = None
-try:
-	graph = Graph(
-		os.environ.get(NEO4J_DATABASE),
-		user=os.environ.get(NEO4J_USER),
-		password=os.environ.get(NEO4J_PASSWORD)
-	)
-except Exception as exc:
-	logging.error(getattr(exc, 'message', repr(exc)))
-	logging.warning(
-		'Neo4j-database connection error, ' +
-		'verify OS environments: %s, %s, %s' %
-		(NEO4J_DATABASE, NEO4J_USER, NEO4J_PASSWORD)
-	)
-	sys.exit(0)
 
 
 def read_and_store_data(filepath: str) -> None:
@@ -82,3 +56,19 @@ def read_and_store_data(filepath: str) -> None:
 					VALUE_NATIONALITY, organization
 				)
 				graph.push(person)
+
+
+def statistics() -> str:
+	'''
+	Return statistics for database.
+	'''
+	return {'Organization': 0, 'Person': 0}
+
+
+@app.get("/")
+def home():
+	'''
+	Return home page data.
+	'''
+    return {'name': 'KDT_CSV2NEO4J'}
+
