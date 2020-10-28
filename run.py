@@ -6,12 +6,20 @@ Main module to run application
 
 # standard libraries imports
 import os, sys
+import logging
 
 # additional libraries imports
 from py2neo import Graph
 
 # modules imports
 from models import Organization, Person
+import service
+
+# initalize basics
+LOGGING_LEVEL = 'LOGGING_LEVEL'
+
+# initialize logging
+logging.basicConfig(level=os.environ.get(LOGGING_LEVEL))
 
 # connect to Neo4j-database
 NEO4J_DATABASE = 'NEO4J_DATABASE'
@@ -22,21 +30,29 @@ NEO4J_PASSWORD = 'NEO4J_PASSWORD'
 try:
 	graph = Graph(
 		os.environ.get(NEO4J_DATABASE),
-		user= os.environ.get(NEO4J_USER),
+		user=os.environ.get(NEO4J_USER),
 		password=os.environ.get(NEO4J_PASSWORD)
 	)
 except Exception as exc:
-	print(getattr(exc, 'message', repr(exc)))
-	print(
+	logging.error(getattr(exc, 'message', repr(exc)))
+	logging.warning(
 		'Neo4j-database connection error, ' +
-		'verify os environments: %s, %s, %s' %
+		'verify OS environments: %s, %s, %s' %
 		(NEO4J_DATABASE, NEO4J_USER, NEO4J_PASSWORD)
 	)
 	sys.exit(0)
 
+# read and store data
+CSV_FILEPATH = 'CSV_FILEPATH'
+
+# try preload CSV-file
+if os.environ.get(CSV_FILEPATH) is not None:
+	if os.path.isfile(os.environ.get(CSV_FILEPATH)):
+		service.read_and_store_data(os.environ.get(CSV_FILEPATH))
+
 
 if __name__ == '__main__':
-	print(
-		'Organization: %d\r\nPerson      : %d' %
+	logging.info(
+		'Organization = %d, Person = %d' %
 		(len(Organization.match(graph)), len(Person.match(graph)))
 	)

@@ -6,6 +6,10 @@ Service module with implementation of:
 - handling REST requests to access data stored in Neo4j-database.
 '''
 
+# standard libraries imports
+import os
+import logging
+
 # modules imports
 from models import Organization, Person
 
@@ -14,4 +18,5 @@ def read_and_store_data(filepath: str) -> None:
 	'''
 	Read data from CSV-file (filepath) and store it to Neo4j-database. 
 	'''
-	pass
+	logging.info('Handle CSV-file on path %s' % filepath)
+	
