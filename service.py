@@ -12,14 +12,12 @@ from typing import Optional
 from pydantic import BaseModel
 from py2neo import NodeMatcher
 from fastapi import HTTPException
+from fastapi import FastAPI
 
 # modules imports
 from storage import graph
 from models import Organization, Person
 import search
-
-# additional libraries imports
-from fastapi import FastAPI
 
 # cypher matching expressions
 MATCH_PERSONS_WITH_ORGANIZATION_EXPRESSION = \
@@ -98,7 +96,7 @@ def read_organization_list(page_index: int = 1, per_page: int = 10):
 @app.get("/api/organization/{organization_group_id}/")
 def read_organization(organization_group_id: str):
 	"""
-	Return organization data by organization_id.
+	Return organization data by organization_group_id.
 	"""
 	organization = Organization.match(graph, organization_group_id).first()
 	if organization is None:
@@ -132,7 +130,7 @@ def create_organization(organization_data: OrganizationData):
 def update_organization(organization_group_id: str,
 						organization_data: OrganizationData):
 	"""
-	Update organization by organization_id and return result status.
+	Update organization by organization_group_id and return result status.
 	"""
 	organization = Organization.match(graph, organization_group_id).first()
 	if organization is None:
@@ -154,7 +152,7 @@ def update_organization(organization_group_id: str,
 @app.delete("/api/organization/{organization_group_id}/")
 def delete_organization(organization_group_id: str):
 	"""
-	Delete organization by organization_id and return result status.
+	Delete organization by organization_group_id and return result status.
 	"""
 	organization = Organization.match(graph, organization_group_id).first()
 	if organization is None:

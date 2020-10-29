@@ -8,9 +8,6 @@ Main module to run application
 import os
 import logging
 
-# additional libraries imports
-
-
 # initalize basics ------------
 LOGGING_LEVEL = 'LOGGING_LEVEL'
 
