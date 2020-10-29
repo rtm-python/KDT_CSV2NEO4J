@@ -24,7 +24,7 @@ D. Dockerize python-script, REST API service and Neo4j / ElasticSearch with dock
 
 ## Implementation
 
-A. Implemented in modules: run.py, storage.py and models.py 
+### A. Implemented in modules: run.py, storage.py and models.py 
 
 It is recomended to run python script in virtual environment:
 ```
@@ -59,8 +59,7 @@ neo4j$ MATCH (Person)-[MEMBERSHIP]->(Organization) RETURN Person, Organization
 neo4j$ CALL db.schema.visualization()
 ```
 
-
-B. Implemented with elasticsearch-py in modules: search, storage and service
+### B. Implemented with elasticsearch-py in modules: search, storage and service
 
 It is simple functions to bulk load, item insertion and deletion, which called each time on data manipulation. As a result it is possible to see created indexes:
 ```
@@ -72,8 +71,7 @@ And make sample search:
 (venv) $ python search.py <index> <simple_query_string>
 ```
 
-
-C. Implemented with FastAPI in modules: run.py and service.py
+### C. Implemented with FastAPI in modules: run.py and service.py
 
 Running is the same as in the A implementation, but now should be used uvicorn:
 ```
@@ -85,8 +83,7 @@ Resulted REST API accessible with SwaggerUI in browser:
 http://localhost:8000/docs/
 ```
 
-
-D. (Not implemented yet)
+### D. (Not implemented yet)
 
 
 
