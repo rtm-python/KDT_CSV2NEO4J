@@ -24,7 +24,7 @@ D. Dockerize python-script, REST API service and Neo4j / ElasticSearch with dock
 
 ## Implementation
 
-A. Implemented in modules: run.py, service.py and models.py 
+A. Implemented in modules: run.py, storage.py and models.py 
 
 It is recomended to run python script in virtual environment:
 ```
@@ -60,8 +60,17 @@ neo4j$ CALL db.schema.visualization()
 ```
 
 
-B. (Not implemented yet)
+B. Implemented with elasticsearch-py in modules: search, storage and service
 
+It is simple functions to bulk load, item insertion and deletion, which called each time on data manipulation. As a result it is possible to see created indexes:
+```
+$ curl -X GET "localhost:9200/_cat/indices?v" -H 'Content-Type: application/json'
+```
+
+And make sample search:
+```
+(venv) $ python search.py <index> <simple_query_string>
+```
 
 
 C. Implemented with FastAPI in modules: run.py and service.py
@@ -87,5 +96,6 @@ D. (Not implemented yet)
 * [ElasticSearch 7.9.3](https://www.elastic.co/guide/en/elasticsearch/reference/7.9/rpm.html)
 * [Python 3.6.8](https://centos.pkgs.org/8/okey-x86_64/python36-3.6.8-2.el8.x86_64.rpm.html)
 * [py2neo 2020.0.0](https://py2neo.org/2020.0/)
-* [FastAPI](https://github.com/tiangolo/fastapi)
-* [uvicorn](http://www.uvicorn.org/#quickstart)
+* [FastAPI o.61.1](https://github.com/tiangolo/fastapi)
+* [Uvicorn 0.12.2](http://www.uvicorn.org/#quickstart)
+* [ElasticSearch 7.9.1](https://elasticsearch-py.readthedocs.io/en/7.9.1/index.html)

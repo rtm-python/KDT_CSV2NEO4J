@@ -118,6 +118,7 @@ def create_organization(organization_data: OrganizationData):
 		organization_data.group_id, organization_data.name)
 	graph.push(organization)
 	search.insert_index(
+		search.ALIAS_MEMBERSHIP,
 		search.make_organization_data(organization)
 	)
 	return {
@@ -140,6 +141,7 @@ def update_organization(organization_group_id: str,
 	organization.name = organization_data.name
 	graph.push(organization)
 	search.insert_index(
+		search.ALIAS_MEMBERSHIP,
 		search.make_organization_data(organization)
 	)
 	return {
@@ -163,6 +165,7 @@ def delete_organization(organization_group_id: str):
 		'name': organization.name
 	}
 	search.delete_index(
+		search.ALIAS_MEMBERSHIP,
 		search.make_organization_data(organization)
 	)
 	graph.delete(organization)
@@ -246,6 +249,7 @@ def create_person(person_data: PersonData):
 	)
 	graph.push(person)
 	search.insert_index(
+		search.ALIAS_PEOPLE,
 		search.make_person_data(person)
 	)
 	return {
@@ -282,6 +286,7 @@ def update_person(person_id: str, person_data: PersonData):
 	person.organization = organization
 	graph.push(person)
 	search.insert_index(
+		search.ALIAS_PEOPLE,
 		search.make_person_data(person)
 	)
 	return {
@@ -321,6 +326,7 @@ def delete_person(person_id: str):
 		][0]
 	}
 	search.delete_index(
+		search.ALIAS_PEOPLE,
 		search.make_person_data(person)
 	)
 	graph.delete(person)
