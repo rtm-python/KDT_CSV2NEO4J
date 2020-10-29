@@ -95,4 +95,4 @@ http://localhost:8000/docs/
 * [py2neo 2020.0.0](https://py2neo.org/2020.0/)
 * [FastAPI o.61.1](https://github.com/tiangolo/fastapi)
 * [Uvicorn 0.12.2](http://www.uvicorn.org/#quickstart)
-* [ElasticSearch 7.9.1](https://elasticsearch-py.readthedocs.io/en/7.9.1/index.html)
+* [Python ElasticSearch Client 7.9.1](https://elasticsearch-py.readthedocs.io/en/7.9.1/index.html)
