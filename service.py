@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
-Service module with implementation of reading data
-from CSV-file and storing it to Neo4j-database;
-'''
+"""
+Service module to implement REST API.
+"""
 
 # standard libraries imports
-import csv
 import logging
 
 # additional libraries imports
@@ -16,17 +14,12 @@ from py2neo import NodeMatcher
 from fastapi import HTTPException
 
 # modules imports
-from run import graph, app
+from storage import graph
 from models import Organization, Person
+import search
 
-# headers' names
-HEADER_GROUP_ID = 'group_id'
-HEADER_GROUP = 'group'
-HEADER_ID = 'id'
-HEADER_NAME = 'name'
-HEADER_SORT_NAME = 'sort_name'
-HEADER_EMAIL = 'email'
-VALUE_NATIONALITY = 'GB (Great Britain)'
+# additional libraries imports
+from fastapi import FastAPI
 
 # cypher matching expressions
 MATCH_PERSONS_WITH_ORGANIZATION_EXPRESSION = \
@@ -36,21 +29,24 @@ MATCH_PERSON_WITH_ORGANIZATION_EXPRESSION = \
 	'MATCH (Person)-[MEMBERSHIP]->(Organization) ' + \
 	'WHERE Person.id = "%s" RETURN Person, Organization'
 
+# iniitalize application
+app = FastAPI()
+
 
 class OrganizationData(BaseModel):
-	'''
+	"""
 	This is an OrganizationData class to retreive request data.
 	Variables: group_id, name.
-	'''
+	"""
 	group_id: str
 	name: str
 
 
 class PersonData(BaseModel):
-	'''
+	"""
 	This is an PersonData class to retreive request data.
 	Variables: id, name, alias, email, nationality, organization_group_id.
-	'''
+	"""
 	id: str
 	name: str
 	alias: str
@@ -59,46 +55,11 @@ class PersonData(BaseModel):
 	organization_group_id: str
 
 
-def read_and_store_data(filepath: str) -> None:
-	'''
-	Read data from CSV-file (filepath) and store it to Neo4j-database. 
-	'''
-	logging.info('Handle CSV-file on path %s' % filepath)
-	with open(filepath) as csv_file:
-		headers = {}
-		index = 0
-		is_first_row = True
-		for data in csv.reader(csv_file):
-			if is_first_row: # initiate headers' indexes
-				for key in data:
-					headers[key] = index
-					index += 1
-				is_first_row = False
-			else: # store data
-				# store organization
-				organization_group_id = data[headers[HEADER_GROUP_ID]]
-				organization_name = data[headers[HEADER_GROUP]]
-				organization = Organization(
-					organization_group_id, organization_name
-				)	
-				graph.push(organization)
-				# store person
-				person_id = data[headers[HEADER_ID]]
-				person_name = data[headers[HEADER_NAME]]
-				person_alias = data[headers[HEADER_SORT_NAME]]
-				person_email = data[headers[HEADER_EMAIL]]
-				person = Person(
-					person_id, person_name, person_alias, person_email,
-					VALUE_NATIONALITY, organization
-				)
-				graph.push(person)
-
-
 @app.get("/")
 def read_statistics():
-	'''
+	"""
 	Return statistics data.
-	'''
+	"""
 	node_matcher = NodeMatcher(graph)
 	return {
 		'name': 'KDT_CSV2NEO4J',
@@ -109,10 +70,10 @@ def read_statistics():
 
 @app.get("/api/organizations/")
 def read_organization_list(page_index: int = 1, per_page: int = 10):
-	'''
+	"""
 	Return organization's data list.
 	Request arguments: page_index, per_page
-	'''
+	"""
 	node_matcher = NodeMatcher(graph)
 	total = len(node_matcher.match('Organization'))
 	page_count = total / per_page
@@ -136,9 +97,9 @@ def read_organization_list(page_index: int = 1, per_page: int = 10):
 
 @app.get("/api/organization/{organization_group_id}/")
 def read_organization(organization_group_id: str):
-	'''
+	"""
 	Return organization data by organization_id.
-	'''
+	"""
 	organization = Organization.match(graph, organization_group_id).first()
 	if organization is None:
 		raise HTTPException(status_code=404, detail="Organization not found")
@@ -150,12 +111,15 @@ def read_organization(organization_group_id: str):
 
 @app.post("/api/organization/")
 def create_organization(organization_data: OrganizationData):
-	'''
+	"""
 	Create new organization and return result info.
-	'''
+	"""
 	organization = Organization(
 		organization_data.group_id, organization_data.name)
 	graph.push(organization)
+	search.insert_index(
+		search.make_organization_data(organization)
+	)
 	return {
 		'status': 'created',
 		'group_id': organization.group_id,
@@ -166,15 +130,18 @@ def create_organization(organization_data: OrganizationData):
 @app.put("/api/organization/{organization_group_id}/")
 def update_organization(organization_group_id: str,
 						organization_data: OrganizationData):
-	'''
+	"""
 	Update organization by organization_id and return result status.
-	'''
+	"""
 	organization = Organization.match(graph, organization_group_id).first()
 	if organization is None:
 		raise HTTPException(status_code=404, detail="Organization not found")
 	organization.group_id = organization_data.group_id
 	organization.name = organization_data.name
 	graph.push(organization)
+	search.insert_index(
+		search.make_organization_data(organization)
+	)
 	return {
 		'status': 'updated',
 		'group_id': organization.group_id,
@@ -184,9 +151,9 @@ def update_organization(organization_group_id: str,
 
 @app.delete("/api/organization/{organization_group_id}/")
 def delete_organization(organization_group_id: str):
-	'''
+	"""
 	Delete organization by organization_id and return result status.
-	'''
+	"""
 	organization = Organization.match(graph, organization_group_id).first()
 	if organization is None:
 		raise HTTPException(status_code=404, detail="Organization not found")
@@ -195,16 +162,19 @@ def delete_organization(organization_group_id: str):
 		'group_id': organization.group_id,
 		'name': organization.name
 	}
+	search.delete_index(
+		search.make_organization_data(organization)
+	)
 	graph.delete(organization)
 	return result
 
 
 @app.get("/api/persons/")
 def read_person_list(page_index: int = 1, per_page: int = 10):
-	'''
+	"""
 	Return person's data list.
 	Request arguments: page_index, per_page
-	'''
+	"""
 	node_matcher = NodeMatcher(graph)
 	total = len(node_matcher.match('Person'))
 	page_count = total / per_page
@@ -239,9 +209,9 @@ def read_person_list(page_index: int = 1, per_page: int = 10):
 
 @app.get("/api/person/{person_id}/")
 def read_person(person_id: str):
-	'''
+	"""
 	Return person data by person_id.
-	'''
+	"""
 	expression = MATCH_PERSON_WITH_ORGANIZATION_EXPRESSION % person_id
 	data = graph.run(expression).data()
 	if len(data) == 0:
@@ -264,9 +234,9 @@ def read_person(person_id: str):
 
 @app.post("/api/person/")
 def create_person(person_data: PersonData):
-	'''
+	"""
 	Create new person and return result info.
-	'''
+	"""
 	organization = Organization.match(
 		graph, person_data.organization_group_id).first()
 	person = Person(
@@ -275,6 +245,9 @@ def create_person(person_data: PersonData):
 		organization
 	)
 	graph.push(person)
+	search.insert_index(
+		search.make_person_data(person)
+	)
 	return {
 		'status': 'created',
 		'id': person.id,
@@ -291,9 +264,9 @@ def create_person(person_data: PersonData):
 
 @app.put("/api/person/{person_id}/")
 def update_person(person_id: str, person_data: PersonData):
-	'''
+	"""
 	Update person by person_id and return result status.
-	'''
+	"""
 	organization = Organization.match(
 		graph, person_data.organization_group_id).first()
 	if organization is None:
@@ -308,6 +281,9 @@ def update_person(person_id: str, person_data: PersonData):
 	person.nationality = person_data.nationality
 	person.organization = organization
 	graph.push(person)
+	search.insert_index(
+		search.make_person_data(person)
+	)
 	return {
 		'status': 'updated',
 		'id': person.id,
@@ -324,9 +300,9 @@ def update_person(person_id: str, person_data: PersonData):
 
 @app.delete("/api/person/{person_id}/")
 def delete_person(person_id: str):
-	'''
+	"""
 	Delete person by person_id and return result status.
-	'''
+	"""
 	person = Person.match(graph, person_id).first()
 	if person is None:
 		raise HTTPException(status_code=404, detail="Person not found")
@@ -344,5 +320,8 @@ def delete_person(person_id: str):
 			} for related_to in person.membership
 		][0]
 	}
+	search.delete_index(
+		search.make_person_data(person)
+	)
 	graph.delete(person)
 	return result
