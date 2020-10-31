@@ -9,6 +9,7 @@ and to store data from CSV-file to Neo4j-database.
 import os, sys
 import logging
 import csv
+from pathlib import Path
 
 # additional libraries imports
 from py2neo import Graph
@@ -27,23 +28,23 @@ HEADER_EMAIL = 'email'
 VALUE_NATIONALITY = 'GB (Great Britain)'
 
 # connect to Neo4j-database -----
-NEO4J_DATABASE = 'NEO4J_DATABASE'
-NEO4J_USER = 'NEO4J_USER'
-NEO4J_PASSWORD = 'NEO4J_PASSWORD'
+NEO4J_DATABASE_FILE = 'NEO4J_DATABASE_FILE'
+NEO4J_USER_FILE = 'NEO4J_USER_FILE'
+NEO4J_PASSWORD_FILE = 'NEO4J_PASSWORD_FILE'
 
 # try to connect
 try:
 	graph = Graph(
-		os.environ.get(NEO4J_DATABASE),
-		user=os.environ.get(NEO4J_USER),
-		password=os.environ.get(NEO4J_PASSWORD)
+		Path(os.environ.get(NEO4J_DATABASE_FILE)).read_text(),
+		user=Path(os.environ.get(NEO4J_USER_FILE)).read_text(),
+		password=Path(os.environ.get(NEO4J_PASSWORD_FILE)).read_text()
 	)
 except Exception as exc:
 	logging.error(getattr(exc, 'message', repr(exc)))
 	logging.warning(
 		'Neo4j-database connection error, ' +
 		'verify OS environments: %s, %s, %s' %
-		(NEO4J_DATABASE, NEO4J_USER, NEO4J_PASSWORD)
+		(NEO4J_DATABASE_FILE, NEO4J_USER_FILE, NEO4J_PASSWORD_FILE)
 	)
 	sys.exit(0)
 
