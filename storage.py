@@ -37,9 +37,12 @@ attempt = 0
 while True:
 	try:
 		graph = Graph(
-			Path(os.environ.get(NEO4J_DATABASE_FILE)).read_text(),
-			user=Path(os.environ.get(NEO4J_USER_FILE)).read_text(),
-			password=Path(os.environ.get(NEO4J_PASSWORD_FILE)).read_text()
+			Path(os.environ.get(NEO4J_DATABASE_FILE)).\
+				read_text().strip(),
+			user=Path(os.environ.get(NEO4J_USER_FILE)).\
+				read_text().strip(),
+			password=Path(os.environ.get(NEO4J_PASSWORD_FILE)).\
+				read_text().strip()
 		)
 		break
 	except Exception as exc:
