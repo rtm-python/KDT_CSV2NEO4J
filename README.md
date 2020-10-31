@@ -83,7 +83,7 @@ Resulted REST API accessible with SwaggerUI in browser:
 http://localhost:8000/docs/
 ```
 
-### D. (Not implemented yet)
+### D. Implemented with docker-compose [KDT_DOCKERIZE](https://github.com/rtm-python/KDT_DOCKERIZE)
 
 
 
