@@ -61,13 +61,19 @@ def storage_decorator(func):
 						raise ValueError(''
 							'Neo4j-graph initialization error, ' +
 							'please, verify OS environments: %s, %s, %s' %
-							(NEO4J_URI_FILE, NEO4J_USER_FILE, NEO4J_PASSWORD_FILE)
+							(
+								NEO4J_URI_FILE,
+								NEO4J_USER_FILE,
+								NEO4J_PASSWORD_FILE
+							)
 						)
+					if __graph is None:
 						# Initiate
 						__graph = Graph(
 							Path(neo4j_uri_file).read_text().strip(),
 							user=Path(neo4j_user_file).read_text().strip(),
-							password=Path(neo4j_password_file).read_text().strip()
+							password=Path(neo4j_password_file). \
+								read_text().strip()
 						)
 					return func(graph=__graph, *args, **kwds)
 			except Exception as exc:
