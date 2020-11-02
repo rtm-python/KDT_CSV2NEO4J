@@ -5,7 +5,7 @@ Search module to create index from Neo4j-database in ElsaticSearch.
 """
 
 # standard libraries imports
-import logging, sys
+import logging, sys, os
 from pathlib import Path
 
 # additional libraries imports
