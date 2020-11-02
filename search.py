@@ -6,6 +6,7 @@ Search module to create index from Neo4j-database in ElsaticSearch.
 
 # standard libraries imports
 import logging, sys
+from pathlib import Path
 
 # additional libraries imports
 from elasticsearch import Elasticsearch
