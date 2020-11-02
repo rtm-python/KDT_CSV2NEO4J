@@ -19,7 +19,11 @@ ALIAS_MEMBERSHIP = 'membership'
 ALIAS_PEOPLE = 'people'
 
 # intialize ElasticSearch
-es = Elasticsearch(http_compress=True)
+ELASTIC_ENGINE_FILE = 'ELASTIC_ENGINE_FILE'
+es = Elasticsearch(
+	Path(os.environ.get(ELASTIC_SEARCH_FILE)).read_text().strip(),
+	http_compress=True
+)
 
 
 def make_organization_data(organization: Organization) -> dict:
