@@ -13,13 +13,18 @@ from pydantic import BaseModel
 from py2neo import NodeMatcher
 from fastapi import HTTPException
 from fastapi import FastAPI
+from fastapi import File
+from fastapi import UploadFile
 
 # modules imports
-from storage import graph
+from storage import get_graph, read_and_store_data
 from models import Organization, Person
 import search
 
-# cypher matching expressions
+# Constants
+ALLOWED_CONTENT_TYPE = ['text/csv']
+
+# Cypher matching expressions
 MATCH_PERSONS_WITH_ORGANIZATION_EXPRESSION = \
 	'MATCH (Person)-[MEMBERSHIP]->(Organization) ' + \
 	'RETURN Person, Organization ORDER BY Person.name SKIP %d LIMIT %d'
@@ -27,7 +32,7 @@ MATCH_PERSON_WITH_ORGANIZATION_EXPRESSION = \
 	'MATCH (Person)-[MEMBERSHIP]->(Organization) ' + \
 	'WHERE Person.id = "%s" RETURN Person, Organization'
 
-# iniitalize application
+# Iniitalize application
 app = FastAPI()
 
 
@@ -53,12 +58,22 @@ class PersonData(BaseModel):
 	organization_group_id: str
 
 
+@app.post("/uploadfile/")
+async def create_upload_file(file: UploadFile = File(...)):
+	"""
+	Upload file and send to store data.
+	"""
+	if file.content_type in ALLOWED_CONTENT_TYPE:
+		read_and_store_data(file.file)
+	return {"filename": file.filename}
+
+
 @app.get("/")
 def read_statistics():
 	"""
 	Return statistics data.
 	"""
-	node_matcher = NodeMatcher(graph)
+	node_matcher = NodeMatcher(get_graph())
 	return {
 		'name': 'KDT_CSV2NEO4J',
 		'organizations': len(node_matcher.match('Organization')),
@@ -72,7 +87,7 @@ def read_organization_list(page_index: int = 1, per_page: int = 10):
 	Return organization's data list.
 	Request arguments: page_index, per_page
 	"""
-	node_matcher = NodeMatcher(graph)
+	node_matcher = NodeMatcher(get_graph())
 	total = len(node_matcher.match('Organization'))
 	page_count = total / per_page
 	page_count = int(page_count) + 1 \
@@ -98,7 +113,7 @@ def read_organization(organization_group_id: str):
 	"""
 	Return organization data by organization_group_id.
 	"""
-	organization = Organization.match(graph, organization_group_id).first()
+	organization = Organization.match(get_graph(), organization_group_id).first()
 	if organization is None:
 		raise HTTPException(status_code=404, detail="Organization not found")
 	return {
@@ -114,7 +129,7 @@ def create_organization(organization_data: OrganizationData):
 	"""
 	organization = Organization(
 		organization_data.group_id, organization_data.name)
-	graph.push(organization)
+	get_graph().push(organization)
 	search.insert_index(
 		search.ALIAS_MEMBERSHIP,
 		search.make_organization_data(organization)
@@ -132,12 +147,12 @@ def update_organization(organization_group_id: str,
 	"""
 	Update organization by organization_group_id and return result status.
 	"""
-	organization = Organization.match(graph, organization_group_id).first()
+	organization = Organization.match(get_graph(), organization_group_id).first()
 	if organization is None:
 		raise HTTPException(status_code=404, detail="Organization not found")
 	organization.group_id = organization_data.group_id
 	organization.name = organization_data.name
-	graph.push(organization)
+	get_graph().push(organization)
 	search.insert_index(
 		search.ALIAS_MEMBERSHIP,
 		search.make_organization_data(organization)
@@ -154,7 +169,7 @@ def delete_organization(organization_group_id: str):
 	"""
 	Delete organization by organization_group_id and return result status.
 	"""
-	organization = Organization.match(graph, organization_group_id).first()
+	organization = Organization.match(get_graph(), organization_group_id).first()
 	if organization is None:
 		raise HTTPException(status_code=404, detail="Organization not found")
 	result = {
@@ -166,7 +181,7 @@ def delete_organization(organization_group_id: str):
 		search.ALIAS_MEMBERSHIP,
 		search.make_organization_data(organization)
 	)
-	graph.delete(organization)
+	get_graph().delete(organization)
 	return result
 
 
@@ -176,7 +191,7 @@ def read_person_list(page_index: int = 1, per_page: int = 10):
 	Return person's data list.
 	Request arguments: page_index, per_page
 	"""
-	node_matcher = NodeMatcher(graph)
+	node_matcher = NodeMatcher(get_graph())
 	total = len(node_matcher.match('Person'))
 	page_count = total / per_page
 	page_count = int(page_count) + 1 \
@@ -203,7 +218,7 @@ def read_person_list(page_index: int = 1, per_page: int = 10):
 					'group_id': organization.get('group_id'),
 					'name': organization.get('name')
 				}
-			} for person, organization in graph.run(expression)
+			} for person, organization in get_graph().run(expression)
 		]
 	}
 	
@@ -214,7 +229,7 @@ def read_person(person_id: str):
 	Return person data by person_id.
 	"""
 	expression = MATCH_PERSON_WITH_ORGANIZATION_EXPRESSION % person_id
-	data = graph.run(expression).data()
+	data = get_graph().run(expression).data()
 	if len(data) == 0:
 		raise HTTPException(status_code=404, detail="Person not found")
 	data = data[0]
@@ -239,13 +254,13 @@ def create_person(person_data: PersonData):
 	Create new person and return result info.
 	"""
 	organization = Organization.match(
-		graph, person_data.organization_group_id).first()
+		get_graph(), person_data.organization_group_id).first()
 	person = Person(
 		person_data.id, person_data.name, person_data.alias,
 		person_data.email, person_data.nationality,
 		organization
 	)
-	graph.push(person)
+	get_graph().push(person)
 	search.insert_index(
 		search.ALIAS_PEOPLE,
 		search.make_person_data(person)
@@ -270,10 +285,10 @@ def update_person(person_id: str, person_data: PersonData):
 	Update person by person_id and return result status.
 	"""
 	organization = Organization.match(
-		graph, person_data.organization_group_id).first()
+		get_graph(), person_data.organization_group_id).first()
 	if organization is None:
 		raise HTTPException(status_code=404, detail="Organization not found")
-	person = Person.match(graph, person_id).first()
+	person = Person.match(get_graph(), person_id).first()
 	if person is None:
 		raise HTTPException(status_code=404, detail="Person not found")
 	person.id = person_data.id
@@ -282,7 +297,7 @@ def update_person(person_id: str, person_data: PersonData):
 	person.email = person_data.email
 	person.nationality = person_data.nationality
 	person.organization = organization
-	graph.push(person)
+	get_graph().push(person)
 	search.insert_index(
 		search.ALIAS_PEOPLE,
 		search.make_person_data(person)
@@ -306,7 +321,7 @@ def delete_person(person_id: str):
 	"""
 	Delete person by person_id and return result status.
 	"""
-	person = Person.match(graph, person_id).first()
+	person = Person.match(get_graph(), person_id).first()
 	if person is None:
 		raise HTTPException(status_code=404, detail="Person not found")
 	result = {
@@ -327,5 +342,6 @@ def delete_person(person_id: str):
 		search.ALIAS_PEOPLE,
 		search.make_person_data(person)
 	)
-	graph.delete(person)
+	get_graph().delete(person)
 	return result
+

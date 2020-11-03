@@ -4,7 +4,7 @@
 Models module for next entities: Person and Organization
 """
 
-# additional libraries imports
+# Additional libraries imports
 from py2neo.ogm import GraphObject, Property, RelatedTo, RelatedFrom
 
 
@@ -67,3 +67,4 @@ class Person(GraphObject):
 		self.email = email
 		self.nationality = nationality
 		self.membership.add(organization)
+

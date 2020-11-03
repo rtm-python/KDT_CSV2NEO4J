@@ -34,19 +34,24 @@ $ . <path_to_venv>/bin/activate
 (venv) $ pip install -r requirements.txt
 ```
 
-Should be defined several variables in OS environment before run script: 
+Could be defined logging level in OS environment: 
 ```
 $ export LOGGING_LEVEL=<LEVEL NAME>
-$ export NEO4J_DATABASE=<NEO4J DATABASE URI>
-$ export NEO4J_USER=<NEO4J USERNAME>
-$ export NEO4J_PASSWORD=<NEO4J PASSWORD>
-$ export CSV_FILEPATH=<PATH TO CSV FILE>
 ```
 
-Next run script to store data from CSV-file to Neo4j-database:
+Reading and storing data from CSV-file implemented in C.
+_CSV-file could be uploaded using REST, data from the uploaded file will be stored in Neo4j-database_
+
+
+Should be defined variables in OS environment to connect to Neo4j-database:
 ```
-(venv) $ python run.py
+$ export NEO4J_URI_FILE=<NEO4J URI_FILE>
+$ export NEO4J_USER_FILE=<NEO4J USER_FILE>
+$ export NEO4J_PASSWORD_FILE=<NEO4J PASSWORD_FILE>
 ```
+_To implement this with Docker, there must be independent textfiles that will contain target data._
+_The Docker volume mounted on container startup with the secrets folder will contain these files._
+
 
 Resulted database could be viewed in Neo4j-browser:
 ```
@@ -73,7 +78,7 @@ And make sample search:
 
 ### C. Implemented with FastAPI in modules: run.py and service.py
 
-Running is the same as in the A implementation, but now should be used uvicorn:
+It is recomended to run application in virtual environment, as mentioned in A, and next:
 ```
 (venv) $ uvicorn run:app
 ```
