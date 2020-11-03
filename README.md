@@ -66,6 +66,11 @@ neo4j$ CALL db.schema.visualization()
 
 ### B. Implemented with elasticsearch-py in modules: search, storage and service
 
+Should be defined variables in OS environment to connect to ElasticSearch:
+```
+$ export ELASTIC_URI_FILE=<ELASTIC URI_FILE>
+```
+
 It is simple functions to bulk load, item insertion and deletion, which called each time on data manipulation. As a result it is possible to see created indexes:
 ```
 $ curl -X GET "localhost:9200/_cat/indices?v" -H 'Content-Type: application/json'
